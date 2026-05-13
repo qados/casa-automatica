@@ -3,8 +3,8 @@
 #include <Keypad.h>
 
 // definições para o keypad e o servo motor
-LiquidCrystal_I2C lcd(0x26, 16, 2);
-Servo meuServo;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+Servo servoUm, servoDois, servoTres;
 
 const byte numRows = 4;
 const byte numCols = 4;
@@ -22,10 +22,12 @@ byte colPins[numCols] = {8, 7, 6, 5};
 Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins,
                          numRows, numCols);
 
+/*
 // definições para o sensor de chuva
 int pino_a = A5;
 int pino_saida = 13;
 int limite = 200;
+*/
 
 void setup()
 {
@@ -37,25 +39,31 @@ void setup()
   delay(1500);
   lcd.clear();
   
-  meuServo.attach(3);
-  meuServo.write(0);
+  servoUm.attach(1);
+  servoUm.write(0);
+  servoDois.attach(2);
+  servoDois.write(0);
+  servoTres.attach(3);
+  servoTres.write(0);
   
   lcd.print("1: Abrir");
   lcd.setCursor(0, 1);
   lcd.print("2: Fechar");
 
+  /*
   // setup do sensor de chuva
   pinMode(pino_saida, OUTPUT);
   Serial.begin(9600);
+  */
 }
 
 void loop()
 {
   char tecla = myKeypad.getKey();
-  int val_a = analogRead(pino_a);
+  // int val_a = analogRead(pino_a);
 
-  Serial.print("Valor analogico: ");
-  Serial.println(val_a);
+  // Serial.print("Valor analogico: ");
+  // Serial.println(val_a);
   
   if (tecla != NO_KEY) {
     lcd.clear();
@@ -63,16 +71,33 @@ void loop()
     lcd.print(tecla);
     
     if (tecla == '1') {
-      meuServo.write(180); // abre
+      servoUm.write(180); // abre
       lcd.setCursor(0, 1);
       lcd.print("Abrindo Portao");
     } else if (tecla == '2') {
-      meuServo.write(0); // fecha
+      servoUm.write(0); // fecha
+      lcd.setCursor(0, 1);
+      lcd.print("Fechando...");
+    } else if (tecla == '3') {
+      servoDois.write(180); // abre
+      lcd.setCursor(0, 1);
+      lcd.print("Abrindo Portao");
+    } else if (tecla == '4') {
+      servoDois.write(0); // fecha
+      lcd.setCursor(0, 1);
+      lcd.print("Fechando...");
+    } else if (tecla == '5') {
+      servoTres.write(180); // abre
+      lcd.setCursor(0, 1);
+      lcd.print("Abrindo Portao");
+    } else if (tecla == '6') {
+      servoTres.write(0); // fecha
       lcd.setCursor(0, 1);
       lcd.print("Fechando...");
     }
   }
 
+  /*
   if (val_a < limite) {
     digitalWrite(pino_saida, HIGH);
     Serial.println("Chuva suficiente - LIGADO");
@@ -80,4 +105,5 @@ void loop()
     digitalWrite(pino_saida, LOW);
     Serial.println("Sem chuva suficiente");
   }
+  */
 }
