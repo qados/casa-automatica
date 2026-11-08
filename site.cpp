@@ -58,11 +58,11 @@ void gerarSite(EthernetClient client) {
 </main> \
 <script> \
 const roomNames = [ \
-    'Sala / térreo', \
-    'Quarto 1', \
-    'Quarto 2', \
-    'Cozinha', \
-    'Banheiro' \
+    { name: 'Sala / térreo', safename: 'sala'}, \
+    { name: 'Quarto 1', safename: 'qua1'}, \
+    { name: 'Quarto 2', safename: 'qua2'}, \
+    { name: 'Cozinha', safename: 'czna'}, \
+    { name: 'Banheiro', safename: 'bnho'} \
 ]; \
  \
 const roomIcons = ['🛋️', '🛏️', '🛌', '🍽️', '🚿']; \
@@ -74,13 +74,13 @@ const roomState = roomNames.map(() => ({ \
  \
 const devices = { \
     windows: [ \
-        { name: 'Janela 1', icon: '🪟', open: false }, \
-        { name: 'Janela 2', icon: '🪟', open: false } \
+        { name: 'Janela 1', safename: 'jan1', icon: '🪟', open: false }, \
+        { name: 'Janela 2', safename: 'jan2', icon: '🪟', open: false } \
     ], \
  \
     gates: [ \
-        { name: 'Portão da garagem', icon: '🚘', open: false }, \
-        { name: 'Portão da casa', icon: '🚪', open: false } \
+        { name: 'Portão da garagem', safename: 'grgm', icon: '🚘', open: false }, \
+        { name: 'Portão da casa', safename: 'oprt', icon: '🚪', open: false } \
     ] \
 }; \
  \
@@ -109,7 +109,7 @@ function renderRooms() { \
  \
         const card = el('article', 'card'); \
         const art = el('div', 'room-art', roomIcons[i]); \
-        const h = el('h3', '', name); \
+        const h = el('h3', '', name.name); \
  \
         const state = el( \
             'p', \
@@ -133,6 +133,11 @@ function renderRooms() { \
             } \
  \
             r.on = !r.on; \
+ \
+            var request = new XMLHttpRequest(); \
+            request.open('POST', '/?'+encodeURI(name.safename)+'='+r.on); \
+            request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); \
+            request.send(); \
  \
             renderRooms(); \
             updateSession(); \

@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 
+#include "pinos.h"
 #include "site.h"
 
 //Definições de IP, máscara de rede e gateway
@@ -21,9 +22,12 @@ void setup() {
 	//Inicializa a interface de rede
 	Ethernet.begin(mac, ip, gateway, subnet);
 	server.begin();
+
+	setPins();
 }
 
 void loop() {
+	String request;
 	//Aguarda conexão do browser
 	EthernetClient client = server.available();
 	if (client) {
@@ -34,6 +38,9 @@ void loop() {
 				char c = client.read();
 				Serial.write(c);
 				Serial.print("");
+
+				request += c;
+
 				// se a solicitação http terminou então envia a resposta
 				if (c == '\n' && currentLineIsBlank) {
 					gerarSite(client);
@@ -53,5 +60,12 @@ void loop() {
 		// fechamento da conexão
 		client.stop();
 		Serial.println("cliente fechou conexão");
+
+		if (request.startsWith("POST")) {
+			String room = request.substring(7, 11); // onde será feita a mudança (sala, quarto, etc)
+			String changeReq = request.substring(12, 17); // ligar ou desligar
+
+			makeChange(room, changeReq);
+		}
 	}
 }
