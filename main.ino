@@ -8,13 +8,9 @@
 
 #include "site.h"
 
-#define leituraAnalogica A2 //Atribui o pino A5 a variável leituraAnalogica
-#define leituraDigital 48 //Atribui o pino 8 a variável leituraDigital 
-
 // LCD
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
-/*
 // Teclado numérico
 const byte QTD_LINHAS = 4;
 const byte QTD_COLUNAS = 4;
@@ -24,11 +20,10 @@ char teclas[QTD_LINHAS][QTD_COLUNAS] = {
   {'7','8','9','C'},
   {'*','0','#','D'}
 };      
-byte pinosLinhas[QTD_LINHAS] = {12, 11, 10, 9};
-byte pinosColunas[QTD_COLUNAS] = {8, 7, 6, 5};
+byte pinosLinhas[QTD_LINHAS] = {9, 8, 7, 6};
+byte pinosColunas[QTD_COLUNAS] = {5, 4, 3, 2};
 
 Keypad teclado = Keypad(makeKeymap(teclas), pinosLinhas, pinosColunas, QTD_LINHAS, QTD_COLUNAS);
-*/
 
 // Pinos
 const byte pinos[] = {20, 21, 22, 23, 24, // leds
@@ -36,9 +31,9 @@ const byte pinos[] = {20, 21, 22, 23, 24, // leds
 const byte QTD_PINOS = 9;
 
 Servo servoJanelaAlta, servoGaragem, servoJanelaBaixa, servoVaral;
-const byte pinoServo1 = 2;
-const byte pinoServo2 = 3;
-const byte pinoServo3 = 4;
+const byte pinoServo1 = 20;
+const byte pinoServo2 = 21;
+const byte pinoServo3 = 22;
 const byte pinoVaral = 50;
 
 // Motor de passo
@@ -56,6 +51,8 @@ IPAddress subnet(255, 255, 255, 0);  //Define a máscara de rede
 // Inicializa o servidor web na porta 80
 EthernetServer server(80);
 
+String room, changeReq;
+
 void setup() {
 	// Inicia o monitor serial
 	Serial.begin(9600);
@@ -64,8 +61,8 @@ void setup() {
 	Ethernet.begin(mac, ip, gateway, subnet);
 	server.begin();
 
-	pinMode(leituraAnalogica, INPUT); //Define leituraAnalogica como entrada
-	pinMode(leituraDigital, INPUT); //Define leituraDigital como entrada
+	// Sensor de chuva
+	pinMode(48, INPUT); //Define leituraDigital como entrada
 
 	// Inicializa a tela
 	lcd.init();
@@ -93,7 +90,7 @@ void setup() {
 }
 
 void loop() {
-	// Caso o sensor de chuva detecte umidade, resete todos os servos
+	/*// Caso o sensor de chuva detecte umidade, resete todos os servos
 	if (lerSensor()) {
 		servoJanelaAlta.write(90);
 		servoGaragem.write(0);
@@ -101,14 +98,13 @@ void loop() {
 		servoVaral.write(0);
 	} else {
 		servoVaral.write(90); // Se não, estenda o varal
-	};
+	};*/
 	
 	mostrarMensagemInicial();
 
 	// Ethernet
 	String request;
-	//Aguarda conexão do browser
-	EthernetClient client = server.available();
+	EthernetClient client = server.available(); // Aguarda conexão do browser
 	if (client) {
 		Serial.println("novo dispositivo conectado");
 		boolean currentLineIsBlank = true;
@@ -144,8 +140,8 @@ void loop() {
 		if (request.startsWith("POST")) {
 			lcd.clear();
 			lcd.setCursor(0, 0);
-			String room = request.substring(7, 11); // onde será feita a mudança (sala, quarto, etc)
-			String changeReq = request.substring(12, 17); // ligar ou desligar
+			room = request.substring(7, 11); // onde será feita a mudança (sala, quarto, etc)
+			changeReq = request.substring(12, 17); // ligar ou desligar
 
 			// Normalizar o pedido
 			changeReq.trim();
@@ -156,35 +152,35 @@ void loop() {
 			} else if (changeReq == "false") {
 				change = false;
 			}
-    
+
 			// LEDs
-			if (room == "sala") {
+			if (room == "sala" or room == "1") {
 				digitalWrite(13, change);
-				lcd.print("Luz Sala"); 		lcd.setCursor(0, 1); lcd.print(change ? "LIGADO" : "DESLIGADO");
-			} else if (room == "qua1") {
+				lcd.print("Luz Sala"); 		lcd.setCursor(0, 1);	lcd.print(change ? "LIGADO" : "DESLIGADO");
+			} else if (room == "qua1" or room == "2") {
 				digitalWrite(21, change);
 				lcd.print("Luz Quarto 1"); 	lcd.setCursor(0, 1);	lcd.print(change ? "LIGADO" : "DESLIGADO");
-			} else if (room == "qua2") {
+			} else if (room == "qua2" or room == "3") {
 				digitalWrite(22, change);
 				lcd.print("Luz Quarto 2"); 	lcd.setCursor(0, 1);	lcd.print(change ? "LIGADO" : "DESLIGADO");
-			} else if (room == "czna") {
+			} else if (room == "czna" or room == "4") {
 				digitalWrite(23, change);
 				lcd.print("Luz Cozinha"); 	lcd.setCursor(0, 1);	lcd.print(change ? "LIGADO" : "DESLIGADO");
-			} else if (room == "bnho") {
+			} else if (room == "bnho" or room == "5") {
 				digitalWrite(24, change);
 				lcd.print("Luz Banheiro"); 	lcd.setCursor(0, 1);	lcd.print(change ? "LIGADO" : "DESLIGADO");
 			// Servos
-			} else if (room == "jan1") {
+			} else if (room == "jan1" or room == "A") {
 				servoJanelaAlta.write(change ? 0 : 90);
 				lcd.print("Janela 1"); 		lcd.setCursor(0, 1);	lcd.print(change ? "ABERTA" : "FECHADA");
-			} else if (room == "jan2") {
+			} else if (room == "jan2" or room == "B") {
 				servoJanelaBaixa.write(change ? 0 : 90);
-    			lcd.print("Janela 2"); 		lcd.setCursor(0, 1);	lcd.print(change ? "ABERTA" : "FECHADA");
-			} else if (room == "grgm") {
+				lcd.print("Janela 2"); 		lcd.setCursor(0, 1);	lcd.print(change ? "ABERTA" : "FECHADA");
+			} else if (room == "grgm" or room == "C") {
 				servoGaragem.write(change ? 180 : 0);
-    			lcd.print("Garagem"); 		lcd.setCursor(0, 1);	lcd.print(change ? "ABERTA" : "FECHADA");
+				lcd.print("Garagem"); 		lcd.setCursor(0, 1);	lcd.print(change ? "ABERTA" : "FECHADA");
 			// Stepper
-			} else if (room == "port") {
+			} else if (room == "port" or room == "D") {
 				lcd.print("Portao ");
 				lcd.setCursor(0, 1);
 			
@@ -196,8 +192,7 @@ void loop() {
 					} else {
 						lcd.print("Ja esta aberto!");
 					}
-				} 
-				else {
+				} else {
 					if (posicaoAberta) { // Só retorna se estiver aberto
 						lcd.print("Fechando portao...");
 						stepperPortao.step(PASSOS_FIXOS); // Valor negativo = Sentido Anti-Horário (Counter-Clockwise)
@@ -213,11 +208,32 @@ void loop() {
 				digitalWrite(44, LOW);
 				digitalWrite(46, LOW); 
 			}
-
-			delay(2000);
-			mostrarMensagemInicial();
 		}
 	}
+	/*
+		char teclaPressionada = teclado.getKey();
+
+  	if (teclaPressionada) {
+		// Se for uma tecla de seleção: LEDs (1 a 5) ou Motores (A a D)
+		if ((teclaPressionada >= '1' && teclaPressionada <= '5') || (teclaPressionada >= 'A' && teclaPressionada <= 'D')) {
+			room = teclaPressionada;
+		}
+		// Se for comando de LIGAR (*) ou DESLIGAR (#)
+		else if (teclaPressionada == '*' || teclaPressionada == '#') {
+			if (room != " ") {
+				if (teclaPressionada == '*') {
+					changeReq = true;
+				} else {
+					changeReq = false;
+				}
+			} else {
+				lcd.clear();
+				lcd.print("Escolha o comp.");
+				delay(1500);
+				mostrarMensagemInicial();
+			}
+		}
+  	}*/
 }
 
 void mostrarMensagemInicial() {
@@ -229,15 +245,12 @@ void mostrarMensagemInicial() {
 }
 
 bool lerSensor() {
-	int valorDigital = digitalRead(leituraDigital); // Realiza a leitura digital do sensor e armazena em valorDigital
+	int valorDigital = digitalRead(48); // Realiza a leitura digital do sensor e armazena em valorDigital
 
-	Serial.println(valorDigital);
-	if (valorDigital == 0) { //Se esse valor for igual a 0, será mostrado no monitor serial que a chuva foi detectada e o led verde se acende
-		Serial.println("Status: Chuva detectada");
+	if (valorDigital == 0) { // Se esse valor for igual a 0, será mostrado no monitor serial que a chuva foi detectada e o led verde se acende
 		return true;
 	}
 	else { // Se esse valor for igual a 1, será mostrado no monitor serial que o solo está seco e o led vermelho se acende
-		Serial.println("Status: Chuva não detectada");
 		return false;
 	}
 	delay(500); // Atraso de 500ms
